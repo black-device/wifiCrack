@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# Author: s4vitar - nmap y pa' dentro
+# Update at: Ene2024 @ Blackdevice
+# Tested on : Kali 6.5.0-kali3-amd64
+
 #Colours
 greenColour="\e[0;32m\033[1m"
 endColour="\033[0m\e[0m"
