@@ -2,10 +2,6 @@
 
 # Author: s4vitar - nmap y pa' dentro
 
-# Updated to: Ene-2024
-# Updated by: BlackDevice
-# Tested on: Kali 6.5.0-kali3-amd64
-
 #Colours
 greenColour="\e[0;32m\033[1m"
 endColour="\033[0m\e[0m"
@@ -29,21 +25,25 @@ function ctrl_c(){
     echo -e "\n${yellowColour}[*]${endColour}${grayColour}Restaurando configuración de red y saliendo...${endColour}"
     tput cnorm
 
-    # Detener modo monitor y restablecer la configuración de red
+    echo "Deteniendo interfaz: ${networkCard}mon"
     if [[ $networkCard =~ .*mon$ ]]; then
         airmon-ng stop ${networkCard} > /dev/null 2>&1
-        if [[ ! -z "$NetworkManager" ]]; then
-            nmcli dev set ${networkCard%mon} managed yes
-            service wpa_supplicant restart
-        fi
+        echo "Interfaz ${networkCard} detenida."
+    else
+        airmon-ng stop ${networkCard}mon > /dev/null 2>&1
+        echo "Interfaz ${networkCard}mon detenida."
     fi
 
+    echo "Reiniciando Network Manager"
+    service NetworkManager restart
+
     rm Captura* 2>/dev/null
+    echo "Saliendo del script."
     exit 0
 }
 
 # Captura señales de interrupción o finalización
-trap ctrl_c EXIT
+trap ctrl_c INT EXIT
 
 function helpPanel(){
         echo -e "\n${yellowColour}[*]${endColour}${grayColour} Uso: ./${0}${endColour}"
@@ -232,9 +232,14 @@ if [ "$(id -u)" == "0" ]; then
     else
         checkDependencies
         startAttack
+
         # No es necesario llamar a tput cnorm y airmon-ng stop aquí,
         # ya que se manejan en la función ctrl_c.
+        
+        #ctrl_c
+
     fi
+    
 else
     echo -e "\n${redColour}[*] No soy root${endColour}\n"
 fi
