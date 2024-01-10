@@ -20,30 +20,17 @@ commonDeps="aircrack-ng macchanger wget git make"
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Definición de la función ctrl_c
-function ctrl_c(){
-    echo -e "\n${yellowColour}[*]${endColour}${grayColour}Restaurando configuración de red y saliendo...${endColour}"
-    tput cnorm
-
-    echo "Deteniendo interfaz: ${networkCard}mon"
-    if [[ $networkCard =~ .*mon$ ]]; then
-        airmon-ng stop ${networkCard} > /dev/null 2>&1
-        echo "Interfaz ${networkCard} detenida."
-    else
-        airmon-ng stop ${networkCard}mon > /dev/null 2>&1
-        echo "Interfaz ${networkCard}mon detenida."
-    fi
-
-    echo "Reiniciando Network Manager"
-    service NetworkManager restart
-
-    rm Captura* 2>/dev/null
-    echo "Saliendo del script."
-    exit 0
-}
-
 # Captura señales de interrupción o finalización
 trap ctrl_c INT EXIT
+
+# Definición de la función ctrl_c
+function ctrl_c(){
+	echo -e "\n${yellowColour}[*]${endColour}${grayColour}Saliendo${endColour}"
+	tput cnorm; airmon-ng stop ${networkCard}mon > /dev/null 2>&1
+	rm Captura* 2>/dev/null
+	exit 0
+}
+
 
 function helpPanel(){
         echo -e "\n${yellowColour}[*]${endColour}${grayColour} Uso: ./${0}${endColour}"
